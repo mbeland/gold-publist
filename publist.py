@@ -4,8 +4,6 @@ Commands:
 
 * `new`: Someone published an article to be tracked
 
-* `delete`: remove a published article from the tracker by argument id
-
 * `report`: List of publications by user or time
 
 """
@@ -43,7 +41,7 @@ def add_pub(server, msg, body):
     rowid = server.query('''
             SELECT rowid FROM publist WHERE url = ?
         ''', article[0])
-    return (f"Okay, tracking item {rowid[0]}, article by <@{author}> :tada:")
+    return (f"Okay, tracking item {rowid[0][0]}, article by <@{author}> :tada:")
 
 
 def report(server, msg, body):
@@ -55,10 +53,11 @@ def report(server, msg, body):
     response = "Okay, I know about these:\n"
     nl = '\n'
     for item in items:
-        local_author, local_url = server.query('''
-            SELECT author, url FROM publist WHERE rowid = 3 
-        ''')
-        list_item = f"{str(item)} - <@{local_author}>: {local_url} {nl}"
+        item = str(item)[1:-2]
+        responses = server.query('''
+            SELECT author, url FROM publist WHERE rowid = ? 
+        ''', int(item))
+        list_item = f"{item} - <@{responses[0][0]}>: {responses[0][1]} {nl}"
         response = response + list_item
     return response
 
