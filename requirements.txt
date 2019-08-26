@@ -1,0 +1,9 @@
+dateparser==0.7.1
+DateTime==4.3
+pkg-resources==0.0.0
+python-dateutil==2.8.0
+pytz==2019.2
+regex==2019.8.19
+six==1.12.0
+tzlocal==2.0.0
+zope.interface==4.6.0

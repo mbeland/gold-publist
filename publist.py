@@ -39,11 +39,11 @@ def add_pub(server, msg, body):
     article = re.findall(urlmarker.URL_REGEX, body)
     server.query('''
             INSERT INTO publist(author, url, pub) VALUES (?, ?, ?)
-        ''', author, article, datetime.date.strftime('%s'))
+        ''', author, article[0], int(datetime.datetime.now().strftime('%s')))
     rowid = server.query('''
             SELECT rowid FROM publist WHERE url = ?
-        ''', article)
-    return (f"Okay, tracking item {rowid}, article by <@{author}> :tada:")
+        ''', article[0])
+    return (f"Okay, tracking item {rowid[0]}, article by <@{author}> :tada:")
 
 
 def report(server, msg, body):
@@ -53,10 +53,13 @@ def report(server, msg, body):
     else:
         items = get_ids(server, body, "time")
     response = "Okay, I know about these:\n"
+    nl = '\n'
     for item in items:
-        list_item = f"{item} - <@{get_data(server, item, author)}>: \
-                    {get_data(server, item, url)} \n"
-        response.join("list_item")
+        local_author, local_url = server.query('''
+            SELECT author, url FROM publist WHERE rowid = 3 
+        ''')
+        list_item = f"{str(item)} - <@{local_author}>: {local_url} {nl}"
+        response = response + list_item
     return response
 
 
@@ -67,18 +70,11 @@ def get_ids(server, ident, lookupType):
             ''', ident)
     else:
         timeSet = (dateparser.parse(ident))
-        timeSet = datetime.date(timeSet).strftime('%s')
+        timeSet = int(datetime.date(timeSet).strftime('%s'))
         ids = server.query('''
             SELECT rowid FROM publist WHERE pub >= ?
         ''', timeSet)
     return ids
-
-
-def get_data(server, rowid, category):
-    rows = server.query('''
-            SELECT ? FROM publist WHERE rowid = ?
-        ''', category, rowid)
-    return rows[0][0]
 
 
 def parse_mentions(body):
