@@ -45,22 +45,25 @@ def add_pub(server, msg, body):
 
 
 def report(server, msg, body):
-    author, body = parse_mentions(body)
+    author, body_chopped = parse_mentions(body)
     if author is not None:
         items = get_ids(server, author, "author")
     else:
-        items = get_ids(server, body, "time")
+        body_chopped = body[10:]
+        items = get_ids(server, body_chopped, "time")
     response = "Okay, I know about these:\n"
     nl = '\n'
-    for item in items:
-        item = str(item)[1:-2]
-        responses = server.query('''
-            SELECT author, url FROM publist WHERE rowid = ? 
-        ''', int(item))
-        list_item = f"{item} - <@{responses[0][0]}>: {responses[0][1]} {nl}"
-        response = response + list_item
+    if items is not None:
+        for item in items:
+            item = str(item)[1:-2]
+            responses = server.query('''
+                SELECT author, url FROM publist WHERE rowid = ? 
+            ''', int(item))
+            list_item = f"{item} - <@{responses[0][0]}>: {responses[0][1]} {nl}"
+            response = response + list_item
+    else:
+        response = "Sorry, couldn't find anything for that - try rephrasing."
     return response
-
 
 def get_ids(server, ident, lookupType):
     if lookupType == "author":
@@ -68,11 +71,14 @@ def get_ids(server, ident, lookupType):
             SELECT rowid FROM publist WHERE author = ?
             ''', ident)
     else:
-        timeSet = (dateparser.parse(ident))
-        timeSet = int(datetime.date(timeSet).strftime('%s'))
-        ids = server.query('''
-            SELECT rowid FROM publist WHERE pub >= ?
-        ''', timeSet)
+        timeSet = (dateparser.parse(str(ident)))
+        if timeSet is not None:
+            timeSet = int(timeSet.strftime('%s'))
+            ids = server.query('''
+                SELECT rowid FROM publist WHERE pub >= ?
+            ''', timeSet)
+        else:
+            ids = None
     return ids
 
 
