@@ -16,12 +16,6 @@ import re
 import urlmarker
 
 
-COMMANDS = {
-    "new": add_pub,
-    "report": report
-}
-
-
 def create_database(server):
     """Define the database used by this bot function"""
     server.query('''
@@ -91,6 +85,12 @@ def parse_mentions(body):
     """ Finds username mentions in message text and returns User ID"""
     user = re.search(MENTION_REGEX, body)
     return (user.group(1), user.group(2).strip()) if user else (None, None)
+
+
+COMMANDS = {
+    "new": add_pub,
+    "report": report
+}
 
 
 def pub(server, msg, cmd, body):
